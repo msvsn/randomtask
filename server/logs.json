@@ -619,3 +619,10 @@
 {"timestamp":"2025-05-22T18:30:22.228Z","type":"stateUpdate","confId":"53e70706-c0a3-43f9-b4b5-63d66307eb1d","studentId":"8bff1661-6679-498f-9ca5-6855b56b0188","attention":"tired","emotion":"sad","camera":"on"}
 {"timestamp":"2025-05-22T18:30:22.539Z","type":"stateUpdate","confId":"53e70706-c0a3-43f9-b4b5-63d66307eb1d","studentId":"8bff1661-6679-498f-9ca5-6855b56b0188","attention":"attentive","emotion":"sad","camera":"on"}
 {"timestamp":"2025-05-22T18:30:23.415Z","type":"serverShutdown","confId":"53e70706-c0a3-43f9-b4b5-63d66307eb1d"}
+{"timestamp":"2025-05-22T21:49:35.089Z","type":"conferenceCreated","confId":"7ba721ce-669b-4d41-9e36-bb8f17865b19","teacherName":"V"}
+{"timestamp":"2025-05-22T21:49:44.618Z","type":"studentJoined","confId":"7ba721ce-669b-4d41-9e36-bb8f17865b19","studentId":"8a58e672-6281-42e9-92db-612fb45e03fd","studentName":"іфіф"}
+{"timestamp":"2025-05-22T21:50:40.796Z","type":"callStudent","confId":"7ba721ce-669b-4d41-9e36-bb8f17865b19","studentId":"8a58e672-6281-42e9-92db-612fb45e03fd"}
+{"timestamp":"2025-05-22T21:50:45.868Z","type":"screenShared","confId":"7ba721ce-669b-4d41-9e36-bb8f17865b19"}
+{"timestamp":"2025-05-22T21:50:48.793Z","type":"screenShareEnded","confId":"7ba721ce-669b-4d41-9e36-bb8f17865b19"}
+{"timestamp":"2025-05-22T21:50:50.816Z","type":"noResponse","confId":"7ba721ce-669b-4d41-9e36-bb8f17865b19","studentId":"8a58e672-6281-42e9-92db-612fb45e03fd"}
+{"timestamp":"2025-05-22T21:51:49.767Z","type":"serverShutdown","confId":"7ba721ce-669b-4d41-9e36-bb8f17865b19"}

@@ -41,6 +41,15 @@ const studentStreams = {};
 const studentStates = {};
 let teacherVideoStream = null;
 
+// MediaPipe analysis variables
+let mediapipeWs = null;
+let isAnalysisActive = false;
+let analysisCanvas = null;
+let canvasContext = null;
+let frameCapture = null;
+let lastFrameSent = 0;
+const FRAME_INTERVAL = 200; // Send frame every 200ms
+
 function logEvent(message) {
   console.log('[Conference] ' + message);
   const logEntry = document.createElement('div');
@@ -179,44 +188,74 @@ peer.on('error', (err) => {
 });
 
 function addVideoStream(peerId, stream) {
-  if (role !== 'teacher') return;
-  logEvent('Adding video stream for peer: ' + peerId);
-
-  let studentName = "Студент";
-  if (conferences && conferences.students) {
-    const student = conferences.students.find(s => s.id === peerId);
-    if (student) studentName = student.name;
-  }
-
-  const existingVideo = document.getElementById(`video-${peerId}`);
-  if (existingVideo) {
-    logEvent('Updating existing video for peer: ' + peerId);
-    existingVideo.srcObject = stream;
-    studentStreams[peerId] = stream;
-    return;
-  }
-
-  const videoContainer = document.createElement('div');
-  videoContainer.id = `container-${peerId}`;
-  const video = document.createElement('video');
-  video.id = `video-${peerId}`;
-  video.srcObject = stream;
-  video.autoplay = true;
-  const label = document.createElement('h4');
-  label.textContent = studentName;
-  videoContainer.appendChild(label);
-  videoContainer.appendChild(video);
-  studentVideos.appendChild(videoContainer);
-  studentStreams[peerId] = stream;
-}
-
-function removeVideoStream(peerId) {
-  if (role !== 'teacher') return;
-  logEvent('Removing video stream for peer: ' + peerId);
-  const videoContainer = document.getElementById(`container-${peerId}`);
-  if (videoContainer) {
-    videoContainer.remove();
-    delete studentStreams[peerId];
+  if (role === 'teacher') {
+    if (studentStreams[peerId]) {
+      logEvent(`Updating existing stream for student ${peerId}`);
+      const videoElement = document.getElementById(`video-${peerId}`);
+      if (videoElement) {
+        videoElement.srcObject = stream;
+      }
+    } else {
+      logEvent(`Adding new student stream: ${peerId}`);
+      
+      const videoContainer = document.createElement('div');
+      videoContainer.className = 'video-container';
+      videoContainer.id = `container-${peerId}`;
+      
+      const video = document.createElement('video');
+      video.id = `video-${peerId}`;
+      video.srcObject = stream;
+      video.autoplay = true;
+      
+      const nameLabel = document.createElement('div');
+      nameLabel.className = 'name-label';
+      nameLabel.textContent = conferences.students?.find(s => s.id === peerId)?.name || peerId;
+      
+      // Add analysis overlay
+      const analysisOverlay = document.createElement('div');
+      analysisOverlay.className = 'analysis-overlay';
+      analysisOverlay.id = `analysis-${peerId}`;
+      
+      // Add analysis canvas for visualization
+      const canvas = document.createElement('canvas');
+      canvas.className = 'analysis-canvas';
+      canvas.id = `canvas-${peerId}`;
+      canvas.width = 320;
+      canvas.height = 240;
+      
+      videoContainer.appendChild(video);
+      videoContainer.appendChild(nameLabel);
+      videoContainer.appendChild(analysisOverlay);
+      videoContainer.appendChild(canvas);
+      studentVideos.appendChild(videoContainer);
+      
+      studentStreams[peerId] = stream;
+      
+      // Initialize student state
+      if (!studentStates[peerId]) {
+        studentStates[peerId] = {
+          attention: 'unknown',
+          emotion: 'neutral',
+          handRaised: false,
+          eyesOpen: true,
+          lookingAtScreen: true
+        };
+      }
+    }
+  } else if (role === 'student') {
+    logEvent(`Received teacher stream: ${peerId}`);
+    if (stream.getVideoTracks().length > 0) {
+      const track = stream.getVideoTracks()[0];
+      if (track.label.includes('screen') || track.label.includes('window')) {
+        logEvent('Detected screen share stream');
+        studentTeacherScreen.srcObject = stream;
+        studentTeacherScreen.style.display = 'block';
+      } else {
+        logEvent('Detected camera stream');
+        studentTeacherVideo.srcObject = stream;
+        teacherVideoStream = stream;
+      }
+    }
   }
 }
 
@@ -281,21 +320,35 @@ socket.on('updateStudentList', (students) => {
   studentTable.innerHTML = '';
 
   if (!conferences) conferences = { students: [] };
-  conferences.students = Object.entries(students).map(([id, student]) => ({ id, name: student.name }));
+  conferences.students = Object.keys(students).map(id => ({
+    id,
+    name: students[id].name
+  }));
 
-  Object.entries(students).forEach(([studentId, student]) => {
+  Object.keys(students).forEach(studentId => {
+    const student = students[studentId];
     const row = document.createElement('tr');
     row.id = `student-row-${studentId}`;
+    
     row.innerHTML = `
-      ${student.name}	Невідомо	Невідомо	${student.camera || 'off'}	Викликати
+      <td>${student.name}</td>
+      <td class="attention-cell">${student.attention || 'unknown'}</td>
+      <td class="emotion-cell">${student.emotion || 'neutral'}</td>
+      <td class="hand-raised-cell">${student.handRaised ? 'Yes' : 'No'}</td>
+      <td class="eyes-open-cell">${student.eyesOpen ? 'Open' : 'Closed'}</td>
+      <td class="looking-cell">${student.lookingAtScreen ? 'Yes' : 'No'}</td>
+      <td><button class="call-button" data-student-id="${studentId}">Викликати</button></td>
     `;
+    
     studentTable.appendChild(row);
-    if (!studentStates[studentId]) {
-      setInterval(() => simulateStudentState(studentId), 5000);
-    }
-    callUser(studentId, myStream, 'camera');
   });
-  updateChart();
+  
+  document.querySelectorAll('.call-button').forEach(button => {
+    button.addEventListener('click', () => {
+      const studentId = button.getAttribute('data-student-id');
+      socket.emit('callStudent', { confId, studentId });
+    });
+  });
 });
 
 socket.on('user-disconnected', ({ studentId }) => {
@@ -307,11 +360,256 @@ socket.on('user-disconnected', ({ studentId }) => {
 });
 
 function simulateStudentState(studentId) {
-  const states = ['attentive', 'sleepy', 'tired', 'not_looking'];
-  const emotions = ['happy', 'neutral', 'sad'];
-  const attention = states[Math.floor(Math.random() * states.length)];
+  const states = ['attentive', 'distracted', 'confused', 'sleepy'];
+  const emotions = ['neutral', 'happy', 'sad', 'surprised'];
+  const state = states[Math.floor(Math.random() * states.length)];
   const emotion = emotions[Math.floor(Math.random() * emotions.length)];
-  socket.emit('studentState', { confId, studentId, attention, emotion, camera: 'on' });
+  socket.emit('updateState', { confId, studentId, state, emotion, camera: true });
+}
+
+// MediaPipe Analysis Functions
+function initMediaPipeAnalysis() {
+  if (role === 'student' && myStream) {
+    logEvent('Initializing MediaPipe analysis');
+    
+    // Create a hidden canvas for frame capture
+    analysisCanvas = document.createElement('canvas');
+    analysisCanvas.width = 320;
+    analysisCanvas.height = 240;
+    canvasContext = analysisCanvas.getContext('2d');
+    
+    // Connect to MediaPipe WebSocket server
+    connectToMediaPipeServer();
+    
+    // Start sending frames
+    startFrameCapture();
+  } else if (role === 'teacher') {
+    logEvent('Teacher role detected - ready to receive analysis results');
+  }
+}
+
+function connectToMediaPipeServer() {
+  try {
+    mediapipeWs = new WebSocket('ws://localhost:8765');
+    
+    mediapipeWs.onopen = () => {
+      logEvent('Connected to MediaPipe analysis server');
+      
+      // Register student with the analysis server
+      mediapipeWs.send(JSON.stringify({
+        type: 'registration',
+        studentId: userId,
+        confId: confId
+      }));
+      
+      isAnalysisActive = true;
+    };
+    
+    mediapipeWs.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'registration_success') {
+          logEvent('Successfully registered with MediaPipe server: ' + data.message);
+        } else if (data.type === 'analysis_result') {
+          // Handle analysis result
+          handleAnalysisResult(data);
+        }
+      } catch (error) {
+        logEvent('Error parsing WebSocket message: ' + error.message);
+      }
+    };
+    
+    mediapipeWs.onerror = (error) => {
+      logEvent('MediaPipe WebSocket error: ' + error.message);
+      isAnalysisActive = false;
+    };
+    
+    mediapipeWs.onclose = () => {
+      logEvent('MediaPipe WebSocket connection closed');
+      isAnalysisActive = false;
+      
+      // Try to reconnect after 5 seconds
+      setTimeout(() => {
+        if (role === 'student' && myStream) {
+          connectToMediaPipeServer();
+        }
+      }, 5000);
+    };
+  } catch (error) {
+    logEvent('Failed to connect to MediaPipe server: ' + error.message);
+  }
+}
+
+function startFrameCapture() {
+  if (!frameCapture) {
+    frameCapture = setInterval(() => {
+      captureAndSendFrame();
+    }, FRAME_INTERVAL);
+  }
+}
+
+function stopFrameCapture() {
+  if (frameCapture) {
+    clearInterval(frameCapture);
+    frameCapture = null;
+  }
+}
+
+function captureAndSendFrame() {
+  if (!isAnalysisActive || !mediapipeWs || mediapipeWs.readyState !== WebSocket.OPEN || !myStream) {
+    return;
+  }
+  
+  const now = Date.now();
+  if (now - lastFrameSent < FRAME_INTERVAL) {
+    return;
+  }
+  
+  try {
+    // Draw current video frame to canvas
+    const videoTrack = myStream.getVideoTracks()[0];
+    if (videoTrack && videoTrack.enabled) {
+      canvasContext.drawImage(studentSelfVideo, 0, 0, analysisCanvas.width, analysisCanvas.height);
+      
+      // Convert canvas to base64 image
+      const imageData = analysisCanvas.toDataURL('image/jpeg', 0.7);
+      const base64Frame = imageData.split(',')[1];
+      
+      // Send frame to MediaPipe server
+      mediapipeWs.send(JSON.stringify({
+        type: 'video_frame',
+        studentId: userId,
+        frame: base64Frame
+      }));
+      
+      lastFrameSent = now;
+    }
+  } catch (error) {
+    logEvent('Error capturing frame: ' + error.message);
+  }
+}
+
+function handleAnalysisResult(data) {
+  const { studentId, result, annotatedFrame } = data;
+  
+  if (role === 'student') {
+    // Update student's own analysis overlay
+    updateAnalysisOverlay(result);
+    
+    // Display the annotated frame if available
+    if (annotatedFrame) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 240;
+      const ctx = canvas.getContext('2d');
+      
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = 'data:image/jpeg;base64,' + annotatedFrame;
+    }
+    
+    // Send analysis results to server for teacher to see
+    socket.emit('updateState', {
+      confId,
+      studentId: userId,
+      attention: result.attention,
+      emotion: result.emotion,
+      handRaised: result.hand_raised,
+      eyesOpen: result.eyes_open,
+      lookingAtScreen: result.looking_at_screen,
+      camera: true
+    });
+  } else if (role === 'teacher') {
+    // Update the student's state in the UI
+    updateStudentState(studentId, {
+      attention: result.attention,
+      emotion: result.emotion,
+      handRaised: result.hand_raised,
+      eyesOpen: result.eyes_open,
+      lookingAtScreen: result.looking_at_screen
+    });
+    
+    // Display the annotated frame
+    if (annotatedFrame) {
+      const canvas = document.getElementById(`canvas-${studentId}`);
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = 'data:image/jpeg;base64,' + annotatedFrame;
+      }
+    }
+  }
+}
+
+function updateAnalysisOverlay(result) {
+  // For student to see their own analysis
+  const overlay = document.createElement('div');
+  overlay.className = 'self-analysis';
+  overlay.innerHTML = `
+    <div class="analysis-item ${result.attention}">Attention: ${result.attention}</div>
+    <div class="analysis-item ${result.emotion}">Emotion: ${result.emotion}</div>
+    <div class="analysis-item ${result.hand_raised ? 'active' : ''}">Hand raised: ${result.hand_raised ? 'Yes' : 'No'}</div>
+  `;
+  
+  // Replace existing overlay if any
+  const existingOverlay = document.querySelector('.self-analysis');
+  if (existingOverlay) {
+    existingOverlay.replaceWith(overlay);
+  } else {
+    studentSelfVideoContainer.appendChild(overlay);
+  }
+}
+
+function updateStudentState(studentId, state) {
+  // Update the student state in our local tracking
+  studentStates[studentId] = state;
+  
+  // Update the student's row in the table
+  const row = document.getElementById(`student-row-${studentId}`);
+  if (row) {
+    const attentionCell = row.querySelector('.attention-cell');
+    const emotionCell = row.querySelector('.emotion-cell');
+    const handRaisedCell = row.querySelector('.hand-raised-cell');
+    
+    if (attentionCell) {
+      attentionCell.textContent = state.attention;
+      attentionCell.className = 'attention-cell ' + state.attention;
+    }
+    
+    if (emotionCell) {
+      emotionCell.textContent = state.emotion;
+      emotionCell.className = 'emotion-cell ' + state.emotion;
+    }
+    
+    if (handRaisedCell) {
+      handRaisedCell.textContent = state.handRaised ? 'Yes' : 'No';
+      handRaisedCell.className = 'hand-raised-cell ' + (state.handRaised ? 'active' : '');
+    }
+  }
+  
+  // Update the video container with visual indicators
+  const container = document.getElementById(`container-${studentId}`);
+  if (container) {
+    // Remove existing status classes
+    container.classList.remove('attentive', 'not_looking', 'sleepy', 'tired');
+    container.classList.add(state.attention);
+    
+    // Update the analysis overlay
+    const overlay = document.getElementById(`analysis-${studentId}`);
+    if (overlay) {
+      overlay.innerHTML = `
+        <div class="indicator attention ${state.attention}"></div>
+        <div class="indicator emotion ${state.emotion}"></div>
+        <div class="indicator hand-raised ${state.handRaised ? 'active' : ''}"></div>
+      `;
+    }
+  }
 }
 
 socket.on('screenShared', ({ confId }) => {
@@ -503,4 +801,9 @@ document.addEventListener('DOMContentLoaded', () => {
   logEvent('DOM fully loaded');
   loadingMessage.style.display = 'none';
   initMedia();
+  
+  // Initialize MediaPipe analysis after media is initialized
+  setTimeout(() => {
+    initMediaPipeAnalysis();
+  }, 2000);
 });
