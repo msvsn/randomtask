@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Викладач - Моніторинг</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="createForm" class="container">
+    <h1>Створити конференцію</h1>
+    <label for="teacherName"></label><input type="text" id="teacherName" placeholder="Ваше ім'я" required>
+    <button id="createButton">Створити</button>
+  </div>
+  <script src="/client/lib/socket.io.min.js"></script>
+  <script src="/client/lib/peer.min.js"></script>
+  <script src="/client/lib/chart.min.js"></script>
+  <script src="teacher.js"></script>
+</body>
+</html>

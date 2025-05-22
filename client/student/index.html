@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Студент - Моніторинг</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="joinForm" class="container">
+    <h1>Приєднатися до заняття</h1>
+    <label for="studentName"></label><input type="text" id="studentName" placeholder="Ваше ім'я" required>
+    <label for="confId"></label><input type="text" id="confId" placeholder="ID конференції" required>
+    <button id="joinButton">Приєднатися</button>
+  </div>
+  <script src="/client/lib/socket.io.min.js"></script>
+  <script src="/client/lib/peer.min.js"></script>
+  <script src="/client/lib/mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="/client/lib/mediapipe/pose/pose.js"></script>
+  <script src="/client/lib/mediapipe/hands/hands.js"></script>
+  <script src="student.js"></script>
+</body>
+</html>

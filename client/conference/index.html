@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конференція - Моніторинг</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Онлайн-заняття</h1>
+    <div id="confIdDisplay"></div>
+    <div id="loadingMessage">Завантаження конференції...</div>
+
+    <!-- Інтерфейс для викладача -->
+    <div id="teacherPanel" style="display: none;">
+      <div class="video-container">
+        <div id="teacherVideoContainer">
+          <h3>Ваше відео</h3>
+          <video id="teacher_teacherVideo" autoplay muted>
+            <span lang="uk">Ваш браузер не підтримує відео.</span>
+          </video>
+          <video id="teacher_teacherScreen" autoplay muted style="display: none;">
+            <span lang="uk">Ваш браузер не підтримує відео.</span>
+          </video>
+        </div>
+        <div id="studentVideos"></div>
+      </div>
+      <div class="controls">
+        <button id="teacher_muteMicButton" role="button" aria-label="Вимкнути або увімкнути мікрофон">Вимкнути мікрофон</button>
+        <button id="teacher_muteVideoButton" role="button" aria-label="Вимкнути або увімкнути камеру">Вимкнути камеру</button>
+        <button id="teacher_shareScreenButton" role="button" aria-label="Поділитися екраном">Поділитися екраном</button>
+        <button id="teacher_attentionTestButton" role="button" aria-label="Запустити тест на увагу">Тест на увагу</button>
+        <button id="teacher_leaveButton" role="button" aria-label="Покинути конференцію">Покинути конференцію</button>
+      </div>
+      <table id="studentTable">
+        <thead>
+          <tr><th>Студент</th><th>Увага</th><th>Емоція</th><th>Камера</th><th>Дії</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <canvas id="stateChart" width="400" height="200">
+        <span lang="uk">Ваш браузер не підтримує відображення діаграм.</span>
+      </canvas>
+    </div>
+
+    <!-- Інтерфейс для студента -->
+    <div id="studentPanel" style="display: none;">
+      <div class="video-container">
+        <div id="student_teacherVideoContainer">
+          <div class="student-self-video">
+            <h3>Ваше відео</h3>
+            <!-- Відео студента додається через JavaScript -->
+          </div>
+          <div class="teacher-video">
+            <h3>Викладач (камера)</h3>
+            <video id="student_teacherVideo" autoplay>
+              <span lang="uk">Ваш браузер не підтримує відео.</span>
+            </video>
+          </div>
+          <div class="teacher-screen">
+            <h3>Викладач (екран)</h3>
+            <video id="student_teacherScreen" autoplay style="display: none;">
+              <span lang="uk">Ваш браузер не підтримує відео.</span>
+            </video>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="student_muteMicButton" role="button" aria-label="Вимкнути або увімкнути мікрофон">Вимкнути мікрофон</button>
+        <button id="student_muteVideoButton" role="button" aria-label="Вимкнути або увімкнути камеру">Вимкнути камеру</button>
+        <button id="student_feelBadButton" role="button" aria-label="Повідомити, що погано почуваюсь">Погано почуваюсь</button>
+        <button id="student_responseButton" role="button" aria-label="Відповісти на звернення викладача" style="display: none;">Відповісти</button>
+        <button id="student_leaveButton" role="button" aria-label="Покинути конференцію">Покинути конференцію</button>
+      </div>
+    </div>
+
+    <div id="eventLog"></div>
+  </div>
+
+  <!-- Бібліотеки -->
+  <script type="text/javascript" src="https://cdn.socket.io/4.7.5/socket.io.min.js" onerror="alert('Помилка: не вдалося завантажити Socket.IO. Перевірте підключення до мережі.')"></script>
+  <script type="text/javascript" src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js" onerror="alert('Помилка: не вдалося завантажити PeerJS. Перевірте підключення до мережі.')"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" onerror="alert('Помилка: не вдалося завантажити Chart.js. Перевірте підключення до мережі.')"></script>
+  <script type="text/javascript" src="script.js" defer onerror="alert('Помилка: не вдалося завантажити script.js. Перевірте шлях до файлу.')"></script>
+</body>
+</html>
