@@ -82,7 +82,7 @@ async function initMedia() {
 
     peer.on('call', (call) => {
       logEvent('Received call from: ' + call.peer);
-      const streamType = call.metadata?.type || 'camera'; // Отримуємо тип потоку з метаданих
+      const streamType = call.metadata?.type || 'camera';
       logEvent('Stream type from metadata: ' + streamType);
       call.answer(myStream);
       call.on('stream', (remoteStream) => {
@@ -210,6 +210,16 @@ function addVideoStream(peerId, stream) {
   studentStreams[peerId] = stream;
 }
 
+function removeVideoStream(peerId) {
+  if (role !== 'teacher') return;
+  logEvent('Removing video stream for peer: ' + peerId);
+  const videoContainer = document.getElementById(`container-${peerId}`);
+  if (videoContainer) {
+    videoContainer.remove();
+    delete studentStreams[peerId];
+  }
+}
+
 async function callUser(userId, stream, streamType) {
   if (!stream) {
     logEvent('No stream available to call user: ' + userId);
@@ -286,6 +296,14 @@ socket.on('updateStudentList', (students) => {
     callUser(studentId, myStream, 'camera');
   });
   updateChart();
+});
+
+socket.on('user-disconnected', ({ studentId }) => {
+  if (role !== 'teacher') return;
+  logEvent('User disconnected: ' + studentId);
+  removeVideoStream(studentId);
+  const row = document.getElementById(`student-row-${studentId}`);
+  if (row) row.remove();
 });
 
 function simulateStudentState(studentId) {

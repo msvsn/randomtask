@@ -99,10 +99,9 @@ io.on('connection', (socket) => {
 
     if (role === 'teacher') {
       conferences[confId].teacher.socketId = socket.id;
-      conferences[confId].teacher.id = userId; // Store the teacher's peer ID
+      conferences[confId].teacher.id = userId;
       console.log('[Server] Teacher', userName, 'joined room', confId, 'with peer ID', userId);
 
-      // Notify all students that teacher has joined
       socket.to(confId).emit('teacherJoined', { teacherId: userId });
     } else {
       const studentId = userId;
@@ -116,7 +115,6 @@ io.on('connection', (socket) => {
       };
       console.log('[Server] Student', userName, 'joined room', confId, 'with peer ID', userId);
 
-      // Send updated student list to teacher
       if (conferences[confId].teacher.socketId) {
         io.to(conferences[confId].teacher.socketId).emit('updateStudentList', conferences[confId].students);
       }
@@ -124,10 +122,8 @@ io.on('connection', (socket) => {
       logEvent({ type: 'studentJoined', confId, studentId, studentName: userName });
     }
 
-    // Emit user-connected event with the peer ID
     socket.to(confId).emit('user-connected', userId);
 
-    // Send conference data to the client
     socket.emit('conferenceData', { 
       confId, 
       teacherId: conferences[confId].teacher.id,
@@ -247,12 +243,13 @@ io.on('connection', (socket) => {
       } else {
         for (const studentId in conf.students) {
           if (conf.students[studentId].socketId === socket.id) {
-            conf.students[studentId].camera = 'off';
-            logEvent({ type: 'studentDisconnected', confId, studentId });
-            io.to(conf.teacher.socketId).emit('updateState', { studentId, ...conf.students[studentId] });
-            io.to(conf.teacher.socketId).emit('updateStudentList', conf.students);
-            socket.to(confId).emit('user-disconnected', studentId);
+            const studentName = conf.students[studentId].name;
             delete conf.students[studentId];
+            logEvent({ type: 'studentDisconnected', confId, studentId, studentName });
+            if (conf.teacher.socketId) {
+              io.to(conf.teacher.socketId).emit('user-disconnected', { studentId });
+              io.to(conf.teacher.socketId).emit('updateStudentList', conf.students);
+            }
             break;
           }
         }
