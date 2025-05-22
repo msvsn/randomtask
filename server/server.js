@@ -99,7 +99,11 @@ io.on('connection', (socket) => {
 
     if (role === 'teacher') {
       conferences[confId].teacher.socketId = socket.id;
-      console.log('[Server] Teacher', userName, 'joined room', confId);
+      conferences[confId].teacher.id = userId; // Store the teacher's peer ID
+      console.log('[Server] Teacher', userName, 'joined room', confId, 'with peer ID', userId);
+
+      // Notify all students that teacher has joined
+      socket.to(confId).emit('teacherJoined', { teacherId: userId });
     } else {
       const studentId = userId;
       conferences[confId].students[studentId] = {
@@ -108,18 +112,40 @@ io.on('connection', (socket) => {
         attention: 'unknown',
         emotion: 'neutral',
         camera: 'on',
+        response: false
       };
-      console.log('[Server] Student', userName, '(', studentId, ') joined room', confId);
-      io.to(conferences[confId].teacher.socketId).emit('updateStudentList', conferences[confId].students);
+      console.log('[Server] Student', userName, 'joined room', confId, 'with peer ID', userId);
+
+      // Send updated student list to teacher
+      if (conferences[confId].teacher.socketId) {
+        io.to(conferences[confId].teacher.socketId).emit('updateStudentList', conferences[confId].students);
+      }
+
       logEvent({ type: 'studentJoined', confId, studentId, studentName: userName });
     }
 
+    // Emit user-connected event with the peer ID
     socket.to(confId).emit('user-connected', userId);
+
+    // Send conference data to the client
+    socket.emit('conferenceData', { 
+      confId, 
+      teacherId: conferences[confId].teacher.id,
+      students: Object.keys(conferences[confId].students).map(id => ({
+        id,
+        name: conferences[confId].students[id].name
+      }))
+    });
   });
 
   socket.on('requestTeacherStream', ({ confId, userId }) => {
+    console.log('[Server] Received requestTeacherStream for student', userId, 'in conf', confId);
     if (conferences[confId] && conferences[confId].teacher.socketId) {
+      console.log('[Server] Forwarding request to teacher', conferences[confId].teacher.socketId);
       io.to(conferences[confId].teacher.socketId).emit('callStudent', { confId, studentId: userId });
+    } else {
+      console.log('[Server] Teacher not found for conference', confId);
+      socket.emit('error', { message: 'Викладач не підключений' });
     }
   });
 
@@ -189,6 +215,14 @@ io.on('connection', (socket) => {
     if (conferences[confId] && conferences[confId].teacher.socketId === socket.id) {
       io.to(confId).emit('screenShared', { confId });
       logEvent({ type: 'screenShared', confId });
+    }
+  });
+
+  socket.on('screenShareEnded', ({ confId }) => {
+    console.log('[Server] Received screenShareEnded for conf', confId);
+    if (conferences[confId]) {
+      io.to(confId).emit('screenShareEnded', { confId });
+      logEvent({ type: 'screenShareEnded', confId });
     }
   });
 

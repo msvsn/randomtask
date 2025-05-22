@@ -7,8 +7,10 @@
 
 #student_teacherVideoContainer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 20px;
+  justify-content: flex-start;
 }
 
 /* Стилі для відео студента */
@@ -37,6 +39,7 @@
   height: 200px;
   border: 1px solid #ccc;
   background-color: #000;
+  display: block; /* Забезпечуємо видимість */
 }
 
 /* Стилі для трансляції екрану викладача */
@@ -51,6 +54,7 @@
   height: 200px;
   border: 1px solid #ccc;
   background-color: #000;
+  display: block; /* Забезпечуємо видимість */
 }
 
 /* Стилі для панелей */
@@ -65,8 +69,17 @@
 }
 
 .controls button {
-  padding: 10px 20px;
+  margin: 5px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #4CAF50;
+  color: white;
   cursor: pointer;
+}
+
+.controls button.sharing {
+  background-color: #f44336;
 }
 
 .controls button.muted {

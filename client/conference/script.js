@@ -36,8 +36,10 @@ const studentResponseButton = document.getElementById('student_responseButton');
 const studentLeaveButton = document.getElementById('student_leaveButton');
 
 let confId, myStream, myScreenStream, role, userId, userName;
+let conferences = {};
 const studentStreams = {};
 const studentStates = {};
+let teacherVideoStream = null;
 
 function logEvent(message) {
   console.log('[Conference] ' + message);
@@ -47,7 +49,6 @@ function logEvent(message) {
   eventLog.scrollTop = eventLog.scrollHeight;
 }
 
-// Перевірка доступу до медіа
 async function checkMediaAccess() {
   try {
     logEvent('Checking media access...');
@@ -62,7 +63,6 @@ async function checkMediaAccess() {
   }
 }
 
-// Ініціалізація медіа
 async function initMedia() {
   logEvent('Initializing media...');
   const hasAccess = await checkMediaAccess();
@@ -75,30 +75,48 @@ async function initMedia() {
       teacherVideo.srcObject = myStream;
       teacherPanel.style.display = 'block';
     } else {
-      studentSelfVideo.srcObject = myStream; // Студент бачить себе
+      studentSelfVideo.srcObject = myStream;
       studentPanel.style.display = 'block';
-      socket.emit('requestTeacherStream', { confId, userId }); // Запит стріму викладача
+      socket.emit('requestTeacherStream', { confId, userId });
     }
 
     peer.on('call', (call) => {
       logEvent('Received call from: ' + call.peer);
+      const streamType = call.metadata?.type || 'camera'; // Отримуємо тип потоку з метаданих
+      logEvent('Stream type from metadata: ' + streamType);
       call.answer(myStream);
       call.on('stream', (remoteStream) => {
-        logEvent('Received remote stream from: ' + call.peer);
-        if (remoteStream.getVideoTracks().some(track => track.label.toLowerCase().includes('screen'))) {
-          logEvent('Detected screen share stream');
-          if (role === 'teacher') {
-            teacherScreen.srcObject = remoteStream;
-            teacherScreen.style.display = 'block';
-          } else {
-            studentTeacherScreen.srcObject = remoteStream;
-            studentTeacherScreen.style.display = 'block'; // Показуємо трансляцію екрану
-          }
-        } else {
-          if (role === 'teacher') {
+        logEvent('Received stream from: ' + call.peer);
+        logEvent('Stream details: ' + JSON.stringify(remoteStream.getVideoTracks().map(track => ({ id: track.id, label: track.label }))));
+
+        if (role === 'teacher') {
+          if (call.peer !== confId) {
             addVideoStream(call.peer, remoteStream);
-          } else if (call.peer === confId) { // Викладач викликає студента
-            studentTeacherVideo.srcObject = remoteStream; // Студент бачить викладача
+          }
+        } else if (role === 'student') {
+          if (streamType === 'screen') {
+            logEvent('This is a screen share stream');
+            studentTeacherScreen.srcObject = remoteStream;
+            studentTeacherScreen.style.display = 'block';
+            studentTeacherScreen.play().catch(err => logEvent('Error playing screen stream: ' + err.message));
+          } else {
+            logEvent('This is a camera stream');
+            if (!teacherVideoStream) {
+              teacherVideoStream = remoteStream;
+              studentTeacherVideo.srcObject = teacherVideoStream;
+              studentTeacherVideo.style.display = 'block';
+              studentTeacherVideo.play().catch(err => logEvent('Error playing video stream: ' + err.message));
+            }
+          }
+        }
+      });
+      call.on('close', () => {
+        logEvent('Call closed with: ' + call.peer);
+        if (role === 'student' && call.peer === confId) {
+          if (streamType === 'screen') {
+            studentTeacherScreen.srcObject = null;
+            studentTeacherScreen.style.display = 'none';
+            socket.emit('requestTeacherStream', { confId, userId });
           }
         }
       });
@@ -108,9 +126,9 @@ async function initMedia() {
     });
 
     if (role === 'teacher') {
-      socket.on('user-connected', (remoteUserId) => {
-        logEvent('User connected: ' + remoteUserId);
-        callUser(remoteUserId, myStream); // Викладач викликає всіх студентів
+      socket.on('user-connected', (userId) => {
+        logEvent(`User connected: ${userId}`);
+        callUser(userId, myStream, 'camera');
       });
     }
   } catch (err) {
@@ -119,22 +137,26 @@ async function initMedia() {
   }
 }
 
-// Визначаємо confId з URL
 confId = window.location.pathname.split('/')[2];
 confIdDisplay.textContent = `ID конференції: ${confId}`;
 
-// Визначаємо роль (викладач чи студент) і ім’я
 const urlParams = new URLSearchParams(window.location.search);
-userName = urlParams.get('studentName') || decodeURIComponent(window.location.search.split('teacherName=')[1] || '');
-role = urlParams.get('studentName') ? 'student' : 'teacher';
-userId = role === 'teacher' ? confId : `student_${Math.random().toString(36).substr(2, 9)}`;
-logEvent(`User details: ${JSON.stringify({ confId, role, userId, userName })}`);
+const studentName = urlParams.get('studentName');
+if (studentName) {
+  role = 'student';
+  userName = studentName;
+  logEvent(`Joining as student: ${userName}`);
+} else {
+  role = 'teacher';
+  userName = 'Викладач';
+  userId = confId;
+  logEvent(`Joining as teacher, ID: ${userId}`);
+}
 
-// Ініціалізація діаграми (для викладача)
 const stateChart = role === 'teacher' ? new Chart(document.getElementById('stateChart'), {
-  type: 'pie',
+  type: 'doughnut',
   data: {
-    labels: ['Уважні', 'Сонні', 'Втомлені', 'Немає обличчя'],
+    labels: ['Уважні', 'Неуважні', 'Відсутні', 'Камера вимкнена'],
     datasets: [{
       data: [0, 0, 0, 0],
       backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56', '#FF9F40']
@@ -143,12 +165,12 @@ const stateChart = role === 'teacher' ? new Chart(document.getElementById('state
   options: { title: { display: true, text: 'Розподіл станів студентів' } }
 }) : null;
 
-// Підключення до PeerJS
 peer.on('open', (id) => {
   logEvent('PeerJS ID: ' + id);
+  userId = id;
   socket.emit('join-room', { confId, userId, userName, role });
   if (role === 'teacher') {
-    callUser(confId, myStream); // Викладач викликає себе для відображення
+    callUser(confId, myStream, 'camera');
   }
 });
 
@@ -156,68 +178,116 @@ peer.on('error', (err) => {
   logEvent('PeerJS error: ' + err.message);
 });
 
-// Додавання відео до сторінки (для викладача)
 function addVideoStream(peerId, stream) {
-  if (role !== 'teacher') return; // Студенти не бачать інших студентів
+  if (role !== 'teacher') return;
   logEvent('Adding video stream for peer: ' + peerId);
+
+  let studentName = "Студент";
+  if (conferences && conferences.students) {
+    const student = conferences.students.find(s => s.id === peerId);
+    if (student) studentName = student.name;
+  }
+
+  const existingVideo = document.getElementById(`video-${peerId}`);
+  if (existingVideo) {
+    logEvent('Updating existing video for peer: ' + peerId);
+    existingVideo.srcObject = stream;
+    studentStreams[peerId] = stream;
+    return;
+  }
+
   const videoContainer = document.createElement('div');
+  videoContainer.id = `container-${peerId}`;
   const video = document.createElement('video');
   video.id = `video-${peerId}`;
   video.srcObject = stream;
   video.autoplay = true;
   const label = document.createElement('h4');
-  label.textContent = peerId;
+  label.textContent = studentName;
   videoContainer.appendChild(label);
   videoContainer.appendChild(video);
   studentVideos.appendChild(videoContainer);
   studentStreams[peerId] = stream;
 }
 
-// Виклик користувача
-function callUser(userId, stream) {
-  if (!stream) return; // Перевірка, що стрім існує
-  logEvent('Calling user: ' + userId);
-  const call = peer.call(userId, stream);
-  call.on('stream', (remoteStream) => {
-    if (role === 'teacher') {
-      addVideoStream(userId, remoteStream);
-    }
-  });
-  call.on('close', () => {
-    if (studentStreams[userId]) {
-      const videoElement = document.getElementById(`video-${userId}`);
-      if (videoElement) videoElement.parentElement.remove();
-    }
-  });
-  call.on('error', (err) => {
-    logEvent('Call error: ' + err.message);
-  });
+async function callUser(userId, stream, streamType) {
+  if (!stream) {
+    logEvent('No stream available to call user: ' + userId);
+    return;
+  }
+  logEvent('Calling user: ' + userId + ' with stream type: ' + streamType);
+  try {
+    const call = peer.call(userId, stream, { metadata: { type: streamType } });
+    logEvent('Call initiated to: ' + userId);
+    call.on('stream', (remoteStream) => {
+      logEvent('Received stream in call response from: ' + userId);
+      logEvent('Stream details: ' + JSON.stringify(remoteStream.getVideoTracks().map(track => ({ id: track.id, label: track.label }))));
+
+      const isScreenShare = call.metadata?.type === 'screen';
+
+      if (role === 'teacher') {
+        if (userId !== confId) {
+          addVideoStream(userId, remoteStream);
+        }
+      } else if (role === 'student') {
+        if (isScreenShare) {
+          logEvent('Received screen share stream from teacher');
+          studentTeacherScreen.srcObject = remoteStream;
+          studentTeacherScreen.style.display = 'block';
+          studentTeacherScreen.play().catch(err => logEvent('Error playing screen stream: ' + err.message));
+        } else {
+          if (!teacherVideoStream) {
+            logEvent('Received camera stream from teacher');
+            teacherVideoStream = remoteStream;
+            studentTeacherVideo.srcObject = teacherVideoStream;
+            studentTeacherVideo.style.display = 'block';
+            studentTeacherVideo.play().catch(err => logEvent('Error playing video stream: ' + err.message));
+          }
+        }
+      }
+    });
+    call.on('close', () => {
+      logEvent('Call closed with: ' + userId);
+      if (role === 'student' && userId === confId) {
+        const isScreenShare = call.metadata?.type === 'screen';
+        if (isScreenShare) {
+          studentTeacherScreen.srcObject = null;
+          studentTeacherScreen.style.display = 'none';
+          socket.emit('requestTeacherStream', { confId, userId });
+        }
+      }
+    });
+    call.on('error', (err) => {
+      logEvent('Error in call: ' + err);
+    });
+  } catch (err) {
+    logEvent('Error calling user: ' + err);
+  }
 }
 
-// Оновлення списку студентів (для викладача)
 socket.on('updateStudentList', (students) => {
   if (role !== 'teacher') return;
   logEvent('Updating student list: ' + JSON.stringify(students));
   studentTable.innerHTML = '';
-  Object.keys(students).forEach((studentId) => {
-    const student = students[studentId];
+
+  if (!conferences) conferences = { students: [] };
+  conferences.students = Object.entries(students).map(([id, student]) => ({ id, name: student.name }));
+
+  Object.entries(students).forEach(([studentId, student]) => {
     const row = document.createElement('tr');
+    row.id = `student-row-${studentId}`;
     row.innerHTML = `
-      <td>${student.name}</td>
-      <td class="attention">${student.attention || 'unknown'}</td>
-      <td class="emotion">${student.emotion || 'neutral'}</td>
-      <td class="camera">${student.camera || 'on'}</td>
-      <td><button onclick="callStudent('${studentId}')">Звернутися</button></td>
+      ${student.name}	Невідомо	Невідомо	${student.camera || 'off'}	Викликати
     `;
     studentTable.appendChild(row);
     if (!studentStates[studentId]) {
       setInterval(() => simulateStudentState(studentId), 5000);
     }
+    callUser(studentId, myStream, 'camera');
   });
   updateChart();
 });
 
-// Симуляція стану студента
 function simulateStudentState(studentId) {
   const states = ['attentive', 'sleepy', 'tired', 'not_looking'];
   const emotions = ['happy', 'neutral', 'sad'];
@@ -226,55 +296,45 @@ function simulateStudentState(studentId) {
   socket.emit('studentState', { confId, studentId, attention, emotion, camera: 'on' });
 }
 
-// Оновлення стану студента
-socket.on('updateState', ({ studentId, attention, emotion, camera }) => {
-  if (role !== 'teacher') return;
-  logEvent(`Updating state for student: ${JSON.stringify({ studentId, attention, emotion, camera })}`);
-  studentStates[studentId] = { attention, emotion, camera };
-  const row = Array.from(studentTable.rows).find((r) => r.cells[0].textContent === studentId);
-  if (row) {
-    row.cells[1].textContent = attention;
-    row.cells[2].textContent = emotion;
-    row.cells[3].textContent = camera;
-    if (attention === 'not_looking' || camera === 'off') {
-      row.classList.add('inactive');
-      studentTable.insertBefore(row, studentTable.firstChild);
-    } else {
-      row.classList.remove('inactive');
+socket.on('screenShared', ({ confId }) => {
+  logEvent('Teacher is sharing screen');
+});
+
+socket.on('screenShareEnded', ({ confId }) => {
+  logEvent('Teacher stopped sharing screen');
+  if (role === 'student') {
+    if (studentTeacherScreen.srcObject) {
+      const tracks = studentTeacherScreen.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      studentTeacherScreen.srcObject = null;
     }
+    studentTeacherScreen.style.display = 'none';
+    socket.emit('requestTeacherStream', { confId, userId });
   }
-  updateChart();
 });
 
-// Оновлення діаграми
-function updateChart() {
-  if (!stateChart) return;
-  logEvent('Updating chart');
-  const counts = { attentive: 0, sleepy: 0, tired: 0, no_face: 0 };
-  Object.values(studentStates).forEach(state => {
-    if (state.attention === 'attentive') counts.attentive++;
-    else if (state.attention === 'sleepy') counts.sleepy++;
-    else if (state.attention === 'not_looking') counts.no_face++;
-    else counts.tired++;
-  });
-  stateChart.data.datasets[0].data = [counts.attentive, counts.sleepy, counts.tired, counts.no_face];
-  stateChart.update();
-}
-
-// Обробка подій
-socket.on('alert', ({ message }) => {
-  logEvent(`Alert: ${message}`);
+socket.on('conferenceData', (data) => {
+  logEvent('Received conference data');
+  conferences = data;
 });
 
-socket.on('noResponse', ({ studentId }) => {
-  if (role !== 'teacher') return;
-  logEvent(`No response from student: ${studentId}`);
+socket.on('requestTeacherStream', ({ confId, userId }) => {
+  if (conferences[confId] && conferences[confId].teacher.socketId) {
+    io.to(conferences[confId].teacher.socketId).emit('callStudent', { confId, studentId: userId });
+  }
 });
 
-socket.on('callStudent', ({ confId, studentId }) => {
-  if (role !== 'student' || userId !== studentId) return;
-  logEvent('Teacher called');
-  studentResponseButton.style.display = 'block';
+socket.on('user-connected', (userId) => {
+  logEvent(`User connected: ${userId}`);
+  if (role === 'teacher') {
+    setTimeout(() => {
+      callUser(userId, myStream, 'camera');
+    }, 1000);
+  } else if (role === 'student') {
+    setTimeout(() => {
+      socket.emit('requestTeacherStream', { confId, userId: peer.id });
+    }, 1000);
+  }
 });
 
 socket.on('conferenceEnded', () => {
@@ -290,7 +350,6 @@ socket.on('error', ({ message }) => {
   window.location.href = role === 'teacher' ? '/teacher' : '/student';
 });
 
-// Кнопки для викладача
 teacherMuteMicButton?.addEventListener('click', () => {
   if (!myStream) return;
   logEvent('Toggle mute mic');
@@ -312,19 +371,31 @@ teacherMuteVideoButton?.addEventListener('click', () => {
 });
 
 teacherShareScreenButton?.addEventListener('click', async () => {
-  if (role !== 'teacher' || !myStream) return;
+  if (role !== 'teacher') return;
+
+  if (myScreenStream) {
+    stopScreenSharing();
+    return;
+  }
+
   logEvent('Share screen button clicked');
   try {
-    myScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); // Додаємо аудіо
+    myScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    logEvent('Screen stream acquired: ' + JSON.stringify(myScreenStream.getVideoTracks().map(track => ({ id: track.id, label: track.label }))));
     teacherScreen.srcObject = myScreenStream;
     teacherScreen.style.display = 'block';
     socket.emit('shareScreen', { confId });
+
+    teacherShareScreenButton.textContent = 'Зупинити демонстрацію';
+    teacherShareScreenButton.classList.add('sharing');
+
     Object.keys(studentStreams).forEach(studentId => {
-      const call = peer.call(studentId, myScreenStream);
+      logEvent(`Sharing screen with student: ${studentId}`);
+      callUser(studentId, myScreenStream, 'screen');
     });
+
     myScreenStream.getVideoTracks()[0].onended = () => {
-      teacherScreen.style.display = 'none';
-      studentTeacherScreen.style.display = 'none'; // Приховуємо екран студента після завершення
+      stopScreenSharing();
     };
   } catch (err) {
     logEvent('Error sharing screen: ' + err.message);
@@ -332,10 +403,35 @@ teacherShareScreenButton?.addEventListener('click', async () => {
   }
 });
 
+function stopScreenSharing() {
+  logEvent('Screen sharing ended');
+  if (myScreenStream) {
+    myScreenStream.getTracks().forEach(track => {
+      track.stop();
+      logEvent(`Stopped track: ${track.kind} - ${track.label}`);
+    });
+  }
+
+  teacherScreen.style.display = 'none';
+  teacherScreen.srcObject = null;
+  myScreenStream = null;
+
+  teacherShareScreenButton.textContent = 'Поділитися екраном';
+  teacherShareScreenButton.classList.remove('sharing');
+
+  socket.emit('screenShareEnded', { confId });
+
+  if (myStream && role === 'teacher') {
+    Object.keys(studentStreams).forEach(studentId => {
+      logEvent(`Re-sharing teacher video with student: ${studentId}`);
+      callUser(studentId, myStream, 'camera');
+    });
+  }
+}
+
 teacherAttentionTestButton?.addEventListener('click', () => {
   if (role !== 'teacher') return;
   logEvent('Attention test button clicked');
-  socket.emit('attentionTest', { confId });
 });
 
 teacherLeaveButton?.addEventListener('click', () => {
@@ -345,7 +441,6 @@ teacherLeaveButton?.addEventListener('click', () => {
   window.location.href = '/teacher';
 });
 
-// Кнопки для студента
 studentMuteMicButton?.addEventListener('click', () => {
   if (!myStream) return;
   logEvent('Toggle mute mic');
@@ -386,7 +481,6 @@ studentLeaveButton?.addEventListener('click', () => {
   window.location.href = '/student';
 });
 
-// Ініціалізація
 document.addEventListener('DOMContentLoaded', () => {
   logEvent('DOM fully loaded');
   loadingMessage.style.display = 'none';
