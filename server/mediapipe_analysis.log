@@ -1,0 +1,180 @@
+2025-05-23 00:49:23,835 - root - INFO - Logging configured
+2025-05-23 00:49:23,837 - __main__ - INFO - Starting mediapipe_analysis.py...
+2025-05-23 00:49:23,878 - __main__ - INFO - Starting MediaPipe analysis server on localhost:8765
+2025-05-23 00:49:23,988 - websockets.server - INFO - server listening on [::1]:8765
+2025-05-23 00:49:23,988 - websockets.server - INFO - server listening on 127.0.0.1:8765
+2025-05-23 00:49:46,565 - websockets.server - INFO - connection open
+2025-05-23 00:49:46,567 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:49:51,578 - websockets.server - INFO - connection open
+2025-05-23 00:49:51,579 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:49:56,585 - websockets.server - INFO - connection open
+2025-05-23 00:49:56,586 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:01,593 - websockets.server - INFO - connection open
+2025-05-23 00:50:01,594 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:06,605 - websockets.server - INFO - connection open
+2025-05-23 00:50:06,605 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:11,616 - websockets.server - INFO - connection open
+2025-05-23 00:50:11,617 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:16,627 - websockets.server - INFO - connection open
+2025-05-23 00:50:16,628 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:21,644 - websockets.server - INFO - connection open
+2025-05-23 00:50:21,644 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:26,658 - websockets.server - INFO - connection open
+2025-05-23 00:50:26,659 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:31,667 - websockets.server - INFO - connection open
+2025-05-23 00:50:31,667 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:36,685 - websockets.server - INFO - connection open
+2025-05-23 00:50:36,685 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:41,701 - websockets.server - INFO - connection open
+2025-05-23 00:50:41,701 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:46,715 - websockets.server - INFO - connection open
+2025-05-23 00:50:46,716 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:51,739 - websockets.server - INFO - connection open
+2025-05-23 00:50:51,750 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:50:56,760 - websockets.server - INFO - connection open
+2025-05-23 00:50:56,761 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:01,786 - websockets.server - INFO - connection open
+2025-05-23 00:51:01,789 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:06,798 - websockets.server - INFO - connection open
+2025-05-23 00:51:06,798 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:11,807 - websockets.server - INFO - connection open
+2025-05-23 00:51:11,807 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:16,816 - websockets.server - INFO - connection open
+2025-05-23 00:51:16,816 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:21,825 - websockets.server - INFO - connection open
+2025-05-23 00:51:21,825 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:26,838 - websockets.server - INFO - connection open
+2025-05-23 00:51:26,839 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:31,849 - websockets.server - INFO - connection open
+2025-05-23 00:51:31,850 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:36,870 - websockets.server - INFO - connection open
+2025-05-23 00:51:36,871 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:41,891 - websockets.server - INFO - connection open
+2025-05-23 00:51:41,892 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'
+2025-05-23 00:51:46,909 - websockets.server - INFO - connection open
+2025-05-23 00:51:46,911 - websockets.server - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\kolos\PycharmProjects\Ashka\.venv\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MediaPipeAnalysisServer.handle_client() missing 1 required positional argument: 'path'

@@ -1,8 +1,40 @@
 /* Стилі для контейнера відео */
 .video-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 320px;
+  margin: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: #000;
+}
+
+.video-container.attentive {
+  border: 3px solid #4CAF50;
+}
+
+.video-container.not_looking {
+  border: 3px solid #FFC107;
+}
+
+.video-container.sleepy,
+.video-container.tired {
+  border: 3px solid #F44336;
+}
+
+.name-label {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+  z-index: 10;
 }
 
 #student_teacherVideoContainer {
@@ -122,4 +154,132 @@
   color: #666;
   text-align: center;
   margin: 20px 0;
+}
+
+/* MediaPipe Analysis Styles */
+.analysis-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 10;
+}
+
+.analysis-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.indicator {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-bottom: 5px;
+}
+
+.indicator.attention.attentive {
+  background-color: #4CAF50;
+}
+
+.indicator.attention.not_looking {
+  background-color: #FFC107;
+}
+
+.indicator.attention.sleepy,
+.indicator.attention.tired {
+  background-color: #F44336;
+}
+
+.indicator.emotion.happy {
+  background-color: #2196F3;
+}
+
+.indicator.emotion.sad {
+  background-color: #9C27B0;
+}
+
+.indicator.emotion.neutral {
+  background-color: #607D8B;
+}
+
+.indicator.hand-raised.active {
+  background-color: #FF9800;
+}
+
+.self-analysis {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  z-index: 10;
+}
+
+.analysis-item {
+  margin-bottom: 3px;
+}
+
+.analysis-item.attentive {
+  color: #4CAF50;
+}
+
+.analysis-item.not_looking {
+  color: #FFC107;
+}
+
+.analysis-item.sleepy,
+.analysis-item.tired {
+  color: #F44336;
+}
+
+.analysis-item.happy {
+  color: #2196F3;
+}
+
+.analysis-item.sad {
+  color: #9C27B0;
+}
+
+.analysis-item.active {
+  color: #FF9800;
+}
+
+/* Student table styles */
+.attention-cell.attentive {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.attention-cell.not_looking {
+  color: #FFC107;
+  font-weight: bold;
+}
+
+.attention-cell.sleepy,
+.attention-cell.tired {
+  color: #F44336;
+  font-weight: bold;
+}
+
+.emotion-cell.happy {
+  color: #2196F3;
+}
+
+.emotion-cell.sad {
+  color: #9C27B0;
+}
+
+.hand-raised-cell.active {
+  color: #FF9800;
+  font-weight: bold;
 }

@@ -145,16 +145,19 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('studentState', ({ confId, studentId, attention, emotion, camera }) => {
-    console.log('[Server] Received studentState:', { confId, studentId, attention, emotion, camera });
+  socket.on('updateState', ({ confId, studentId, attention, emotion, handRaised, eyesOpen, lookingAtScreen, camera }) => {
+    console.log('[Server] Received updateState for student', studentId, 'in conf', confId);
     if (conferences[confId] && conferences[confId].students[studentId]) {
       conferences[confId].students[studentId] = {
         ...conferences[confId].students[studentId],
         attention,
         emotion,
+        handRaised,
+        eyesOpen,
+        lookingAtScreen,
         camera,
       };
-      logEvent({ type: 'stateUpdate', confId, studentId, attention, emotion, camera });
+      logEvent({ type: 'stateUpdate', confId, studentId, attention, emotion, handRaised, eyesOpen, lookingAtScreen, camera });
       io.to(conferences[confId].teacher.socketId).emit('updateState', { studentId, ...conferences[confId].students[studentId] });
     }
   });
